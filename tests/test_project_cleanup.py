@@ -192,6 +192,28 @@ class CleanupTests(unittest.TestCase):
         self.assertEqual((result["restored"], result["already_present"]), (1, 1))
         self.assertTrue((self.root / "first.md").exists())
 
+    def test_restore_accepts_equivalent_journal_path(self):
+        original = self.put("done.md")
+        plan, token = self.prepare(["done.md"])
+        journal = self.apply(plan, token)
+        alias = journal.parent / ".." / journal.parent.name / journal.name
+        result = cleanup.restore(types.SimpleNamespace(journal=str(alias)))
+        self.assertEqual(result["restored"], 1)
+        self.assertTrue(original.exists())
+
+    def test_restore_rejects_linked_journal_when_available(self):
+        original = self.put("done.md")
+        plan, token = self.prepare(["done.md"])
+        journal = self.apply(plan, token)
+        linked = self.root / "journal-link.json"
+        try:
+            linked.symlink_to(journal)
+        except OSError:
+            self.skipTest("Symbolic links unavailable")
+        with self.assertRaises(cleanup.Refusal):
+            cleanup.restore(types.SimpleNamespace(journal=str(linked)))
+        self.assertFalse(original.exists())
+
     def test_hardlink_and_symlink_refused_when_available(self):
         target = self.put("done.md")
         link = self.root / "hard.md"

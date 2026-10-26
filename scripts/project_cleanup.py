@@ -383,6 +383,12 @@ def apply(args):
 
 def restore(args):
     supplied = Path(args.journal).absolute()
+    # Resolve equivalent spellings (including Windows 8.3 names) only after
+    # rejecting links in the supplied path, preserving the restore boundary.
+    for component in [supplied, *supplied.parents]:
+        if linklike(component):
+            raise Refusal("Linked journal path")
+    supplied = supplied.resolve(strict=True)
     journal = read_json(supplied)
     if journal.get("version") != 1 or not re.fullmatch(r"[0-9a-f]{32}", str(journal.get("id", ""))):
         raise Refusal("Unsupported journal")
