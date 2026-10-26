@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Cleanup"
+  short_description: "Анализ и уборка планов и документов после одобрения"
+  default_prompt: "Используй $project-cleanup: проверь планы, документы и медиа проекта, подготовь сводку и дождись моего одобрения очистки."
